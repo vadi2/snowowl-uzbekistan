@@ -6,7 +6,7 @@ Needs Docker, about 16 GB free RAM (6 GB heap each for Snow Owl and Elasticsearc
 
 ## 1. Get the release
 
-SNOMED CT is licensed content and is not included in this repo. Get `SnomedCT_UzbekistanSimplexEdition_Production_20260928T120000Z.zip` (583 MB) from SNOMED International ([MLDS](https://mlds.ihtsdotools.org/)) under your own affiliate licence and put it in this folder. It is a full edition: International 20260901 plus the Uzbekistan module `11000339101`, so nothing else needs importing.
+SNOMED CT is licensed content and is not included in this repo. Get `SnomedCT_UzbekistanSimplexEdition_Production_20260928T120000Z.zip` (583 MB) from [MLDS](https://mlds.ihtsdotools.org/) or ask the Uzbekistan SNOMED CT National Release Center and put it in this folder. It is a full edition: International 20260901 plus the Uzbekistan module `11000339101`, so nothing else needs importing.
 
 ## 2. Config and compose file
 
