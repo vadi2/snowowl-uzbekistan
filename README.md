@@ -120,10 +120,43 @@ jq -r '.expansion.contains[] | [.code, .display, (.designation[0].value // "")] 
   expansions/uz.dhp.core/ValueSet-body-site-vs.json > body-site-vs.csv
 ```
 
-Notes:
+Notes on the script output:
 
 - `display` is the US English preferred term. A `designation` with `language: uz` is added where the release has an Uzbek term; it has only 11 Uzbek descriptions on 10 concepts so far.
 - Counts differ slightly from tx.fhir.org or Ontoserver, which run newer International releases (body-site-vs: 45,367 here, 45,994 on International 20261001).
+
+### Single value sets with curl
+
+Rule-based value sets (an `is-a` filter) expand through Snow Owl's implicit value set for that concept. Read the concept from the published value set, then expand it in one call (`count` must be at least the size of the set):
+
+```sh
+VS=body-site-vs   # or condition-severity-vs, target-disease-vs, adverse-event-outcome-vs, goal-description-vs, recommendation-reason-vs, reaction-type-vs
+ROOT=$(curl -s https://dhp.uz/fhir/core/ValueSet-$VS.json | jq -r '.compose.include[0].filter[0].value')
+curl -u test:test -H 'Accept: application/fhir+json' -G 'http://localhost:8080/snowowl/fhir/ValueSet/$expand' \
+  --data-urlencode "url=http://snomed.info/sct/11000339101?fhir_vs=isa/$ROOT" \
+  --data-urlencode 'count=200000' -o $VS.json
+```
+
+| Value set | Concept | Codes |
+|---|---|---|
+| body-site-vs | 123037004 Body structure | 45,367 |
+| condition-severity-vs | 272141005 Severities | 9 |
+| target-disease-vs | 64572001 Disease | 92,614 |
+| adverse-event-outcome-vs | 281647001 Adverse reaction | 2,027 |
+| goal-description-vs, recommendation-reason-vs, reaction-type-vs | 404684003 Clinical finding | 129,234 |
+
+The curl result has one code less than the table: Snow Owl's `isa/` leaves out the concept itself, which the IG's `is-a` includes. Its `display` is the FSN ("... (body structure)"); add `--data-urlencode 'includeDesignations=true'` to get preferred terms in `designation` (makes the response about 25 times larger). The `filter` parameter fails on Snow Owl 10.1.0.
+
+Value sets that list their codes need no expansion; look up each code for its display (add `&displayLanguage=uz` for Uzbek, which returns the code itself when there is no Uzbek term). Use `https://dhp.uz/fhir/integrations/...` for integrations value sets:
+
+```sh
+curl -s https://dhp.uz/fhir/core/ValueSet-blood-group-vs.json | jq -r '.compose.include[].concept[].code' |
+while read c; do
+  curl -s -u test:test -H 'Accept: application/fhir+json' \
+    "http://localhost:8080/snowowl/fhir/CodeSystem/\$lookup?system=http://snomed.info/sct&version=http://snomed.info/sct/11000339101&code=$c" |
+    jq -r --arg c "$c" '[$c, (.parameter[] | select(.name=="display") | .valueString)] | @csv'
+done
+```
 
 ## Stop, start, reset
 
