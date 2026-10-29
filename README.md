@@ -43,12 +43,12 @@ curl -u test:test -X POST -H 'Content-Type: application/json' http://localhost:8
   }}'
 ```
 
-## 5. Import (about 15 minutes)
+## 5. Import (10-15 minutes)
 
 ```sh
-curl -i -u test:test "http://localhost:8080/snowowl/snomedct/SNOMEDCT-UZ/import?type=snapshot&createVersions=true" \
-  -F file=@SnomedCT_UzbekistanSimplexEdition_Production_20260928T120000Z.zip
-# poll the Location header URL until "status": "FINISHED" and "success": true
+curl -sS -i -u test:test "http://localhost:8080/snowowl/snomedct/SNOMEDCT-UZ/import?type=snapshot&createVersions=true" \
+  -F file=@SnomedCT_UzbekistanSimplexEdition_Production_20260928T120000Z.zip | grep -i '^location'
+# poll the printed Location URL until "status" is "FINISHED" and "response.success" is true
 curl -u test:test '<Location URL>?pretty'
 ```
 
