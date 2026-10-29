@@ -136,15 +136,13 @@ curl -u test:test -H 'Accept: application/fhir+json' -G 'http://localhost:8080/s
   --data-urlencode 'count=200000' -o $VS.json
 ```
 
-| Value set | Concept | Codes |
-|---|---|---|
-| body-site-vs | 123037004 Body structure | 45,367 |
-| condition-severity-vs | 272141005 Severities | 9 |
-| target-disease-vs | 64572001 Disease | 92,614 |
-| adverse-event-outcome-vs | 281647001 Adverse reaction | 2,027 |
-| goal-description-vs, recommendation-reason-vs, reaction-type-vs | 404684003 Clinical finding | 129,234 |
-
-The curl result has one code less than the table: Snow Owl's `isa/` leaves out the concept itself, which the IG's `is-a` includes. Its `display` is the FSN ("... (body structure)"); add `--data-urlencode 'includeDesignations=true'` to get preferred terms in `designation` (makes the response about 25 times larger). The `filter` parameter fails on Snow Owl 10.1.0.
+| Value set | Concept |
+|---|---|
+| body-site-vs | 123037004 Body structure |
+| condition-severity-vs | 272141005 Severities |
+| target-disease-vs | 64572001 Disease |
+| adverse-event-outcome-vs | 281647001 Adverse reaction |
+| goal-description-vs, recommendation-reason-vs, reaction-type-vs | 404684003 Clinical finding |
 
 Value sets that list their codes need no expansion; look up each code for its display (add `&displayLanguage=uz` for Uzbek, which returns the code itself when there is no Uzbek term). Use `https://dhp.uz/fhir/integrations/...` for integrations value sets:
 
