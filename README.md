@@ -123,7 +123,6 @@ jq -r '.expansion.contains[] | [.code, .display, (.designation[0].value // "")] 
 Notes on the script output:
 
 - `display` is the US English preferred term. A `designation` with `language: uz` is added where the release has an Uzbek term; it has only 11 Uzbek descriptions on 10 concepts so far.
-- Counts differ slightly from tx.fhir.org or Ontoserver, which run newer International releases (body-site-vs: 45,367 here, 45,994 on International 20261001).
 
 ### Single value sets with curl
 
@@ -131,7 +130,7 @@ Rule-based value sets (an `is-a` filter) expand through Snow Owl's implicit valu
 
 ```sh
 VS=body-site-vs   # or condition-severity-vs, target-disease-vs, adverse-event-outcome-vs, goal-description-vs, recommendation-reason-vs, reaction-type-vs
-ROOT=$(curl -s https://dhp.uz/fhir/core/ValueSet-$VS.json | jq -r '.compose.include[0].filter[0].value')
+ROOT=$(curl -s https://dhp.uz/fhir/core/ValueSet-$VS.json | jq -r '.compose.include[0].filter[0].value')   # concept in the value set's is-a filter, e.g. 123037004
 curl -u test:test -H 'Accept: application/fhir+json' -G 'http://localhost:8080/snowowl/fhir/ValueSet/$expand' \
   --data-urlencode "url=http://snomed.info/sct/11000339101?fhir_vs=isa/$ROOT" \
   --data-urlencode 'count=200000' -o $VS.json
