@@ -1,0 +1,5 @@
+*.zip
+SnomedCT_*/
+sct2_*
+der2_*
+*.json
