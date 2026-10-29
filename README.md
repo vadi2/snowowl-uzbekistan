@@ -65,13 +65,6 @@ Snow Owl OSS can't load FHIR ValueSets, so `expand-snomed-valuesets.py` does the
 
 Takes about 2 minutes. It prints the code count per value set and flags listed codes that are inactive or unknown in the release. Value sets that include all of SNOMED CT are skipped. `display` is the US English preferred term; a `designation` with `language: uz` is added where the release has an Uzbek term.
 
-To get one value set as CSV:
-
-```sh
-jq -r '.expansion.contains[] | [.code, .display, (.designation[0].value // "")] | @csv' \
-  expansions/uz.dhp.core/ValueSet-body-site-vs.json > body-site-vs.csv
-```
-
 ### Single value sets with curl
 
 Rule-based value sets (an `is-a` filter):
@@ -93,6 +86,13 @@ while read c; do
     "http://localhost:8080/snowowl/fhir/CodeSystem/\$lookup?system=http://snomed.info/sct&version=http://snomed.info/sct/11000339101&code=$c" |
     jq -r --arg c "$c" '[$c, (.parameter[] | select(.name=="display") | .valueString)] | @csv'
 done
+```
+
+To get one value set as CSV:
+
+```sh
+jq -r '.expansion.contains[] | [.code, .display, (.designation[0].value // "")] | @csv' \
+  expansions/uz.dhp.core/ValueSet-body-site-vs.json > body-site-vs.csv
 ```
 
 ## Stop, start, reset
