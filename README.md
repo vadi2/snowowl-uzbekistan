@@ -102,33 +102,28 @@ curl -u test:test '<Location URL>?pretty'
 
 A handful of "GuideURL field was empty" MRCM warnings in `defects` are harmless.
 
-## 6. Expand
+## 6. Expand the IG value sets
 
-Body site value set (`<< 123037004`), all 45,367 codes in one call:
-
-```sh
-curl -u test:test -H 'Accept: application/fhir+json' -G 'http://localhost:8080/snowowl/fhir/ValueSet/$expand' \
-  --data-urlencode 'url=http://snomed.info/sct/11000339101?fhir_vs=ecl/<<123037004' \
-  --data-urlencode 'count=50000' -o body-site-vs.json
-```
-
-Other queries:
+Snow Owl OSS can't load FHIR ValueSets (`$load-package` imports nothing and creating one returns "FHIR ValueSet resource creation is not configured"), so `expand-snomed-valuesets.py` does it instead. It downloads the latest `uz.dhp.core` and `uz.dhp.integrations` packages from packages.fhir.org, picks the value sets that use only SNOMED CT, evaluates their `compose` against Snow Owl and writes one ValueSet with an `expansion` per value set:
 
 ```sh
-# native ECL, count only
-curl -u test:test -G http://localhost:8080/snowowl/snomedct/SNOMEDCT-UZ/concepts \
-  --data-urlencode 'ecl=<<123037004' --data-urlencode 'active=true' --data-urlencode 'limit=0'
-# Uzbek display for a code
-curl -u test:test -H 'Accept: application/fhir+json' \
-  'http://localhost:8080/snowowl/fhir/CodeSystem/$lookup?system=http://snomed.info/sct&version=http://snomed.info/sct/11000339101&code=129173004&displayLanguage=uz'
+./expand-snomed-valuesets.py                      # writes expansions/<package>/ValueSet-<id>.json
+./expand-snomed-valuesets.py uz.dhp.core#0.12.0   # one package, pinned version
 ```
 
-Quirks:
+Takes about 2 minutes for both IGs (71 value sets on 2026-10-29). It prints the code count per value set and flags listed codes that are inactive or unknown in the release. Value sets that include all of SNOMED CT are skipped.
 
-- Use `fhir_vs=ecl/<<X`, not `fhir_vs=isa/X`: Snow Owl's `isa/` leaves out the root concept itself.
-- Expansion `display` is the FSN ("... (body structure)"). For the preferred term add `includeDesignations=true` or use `$lookup`.
-- The release has only 11 Uzbek descriptions on 10 concepts, none of them body structures, so `displayLanguage=uz` on body sites still returns English.
-- Counts differ slightly from tx.fhir.org or Ontoserver, which run newer International releases (for example 45,994 on 20261001).
+To get one value set as CSV:
+
+```sh
+jq -r '.expansion.contains[] | [.code, .display, (.designation[0].value // "")] | @csv' \
+  expansions/uz.dhp.core/ValueSet-body-site-vs.json > body-site-vs.csv
+```
+
+Notes:
+
+- `display` is the US English preferred term. A `designation` with `language: uz` is added where the release has an Uzbek term; it has only 11 Uzbek descriptions on 10 concepts so far.
+- Counts differ slightly from tx.fhir.org or Ontoserver, which run newer International releases (body-site-vs: 45,367 here, 45,994 on International 20261001).
 
 ## Stop, start, reset
 
